@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Layers Control Tutorial - Leaflet</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+	<script src="data.js"></script>
+	<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+	<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+	<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+	<script src="https://unpkg.com/leaflet.markerprecluster@1.0.0/markerprecluster-min.js"></script>
+	<style>
+		.leaflet-control-zoom-display {
+			background-color: #fff;
+			border-bottom: 1px solid #ccc;
+			width: 26px;
+			height: 26px;
+			line-height: 26px;
+			display: block;
+			text-align: center;
+			text-decoration: none;
+			color: black;
+			padding-top: 0.3em;
+			font: bold 12px/20px Tahoma, Verdana, sans-serif;
+		}
+		body {
+			padding: 0;
+			margin: 0;
+		}
+		html, body, #map {
+			height: 100%;
+			width: 100%;
+			background: white;
+		}
+		#map .leaflet-div-icon {
+			width:0;
+			height:0;
+			border: 0;
+			padding: 0;
+		}
+
+		#map .leaflet-div-icon div {
+			display:inline-block;
+			padding: 3px;
+			border: 1px solid #666;
+			border-radius: 3px;
+			background:rgba(255, 255, 255, 0.705);
+			transform:translate(-50%, -50%);
+			text-align: center;
+		}
+	</style>
+	<script>
+		L.Control.ZoomDisplay = L.Control.extend({
+			options: {
+				position: 'topleft'
+			},
+	
+			onAdd: function (map) {
+				this._map = map;
+				this._container = L.DomUtil.create('div', 'leaflet-control-zoom-display leaflet-bar-part leaflet-bar');
+				this.updateMapZoom(map.getZoom());
+				map.on('zoomend', this.onMapZoomEnd, this);
+				return this._container;
+			},
+	
+			onRemove: function (map) {
+				map.off('zoomend', this.onMapZoomEnd, this);
+			},
+	
+			onMapZoomEnd: function (e) {
+				this.updateMapZoom(this._map.getZoom());
+			},
+	
+			updateMapZoom: function (zoom) {
+				if(typeof(zoom) === "undefined"){zoom = ""}
+				this._container.innerHTML = zoom;
+			}
+		});
+	
+	
+		L.Map.mergeOptions({
+			zoomDisplayControl: true
+		});
+	
+		L.Map.addInitHook(function () {
+			if (this.options.zoomDisplayControl) {
+				this.zoomDisplayControl = new L.Control.ZoomDisplay();
+				this.addControl(this.zoomDisplayControl);
+			}
+		});
+	
+		L.control.zoomDisplay = function (options) {
+			return new L.Control.ZoomDisplay(options);
+		};
+	</script>
+</head>
+<body>
+<div id='map'></div>
+<script>
+
+	var map = L.map('map', {
+		zoom: 0,
+		center: [0,0],
+		minZoom: -6, //Math.min(...Object.keys(dZoomLevel)),
+		maxZoom: 30, //Math.max(...Object.keys(dZoomLevel)),
+		crs: L.CRS.Simple,
+		//continuousWorld: true,
+		//maxBounds: bounds,
+		//maxBoundsViscosity: 1,
+	});
+	map.addControl(new L.Control.Fullscreen());
+	map.fitBounds(map_bounds);
+	L.imageOverlay('DocMapdensity.svg', image_bounds).addTo(map);
+	var zoomOffset = map.getZoom();
+	map.options.minZoom = zoomOffset;
+	map.options.maxZoom = zoomOffset + max_depth+6;
+	map.options.zoom = zoomOffset;
+
+	L.Control.ZoomDisplay.prototype.updateMapZoom = function (zoom) {
+		if(typeof(zoom) === "undefined"){zoom = ""}
+		this._container.innerHTML = zoom - zoomOffset;
+	}
+	map.fire("zoomend");
+	
+	var options = {
+		showCoverageOnHover: false,
+		maxClusterRadius: 100000,
+	};
+
+	var leafs = L.markerClusterGroup({
+		spiderfyOnMaxZoom: true,
+		showCoverageOnHover: true,
+		zoomToBoundsOnClick: true,
+		singleMarkerMode: false,
+		iconCreateFunction: function(cluster) {
+			return L.divIcon({ html: "<div><b>"+ dNode[cluster.nodeID].join("<br>") + '</b><br>(' + cluster.getChildCount() + "children)</div>", iconSize: "auto"});
+		},
+	});
+
+	for (var info of lMarker) {
+		//L.circle(info[1], {radius: 0.001}).addTo(map);
+		var leaf = L.leaf(info[1], info[2]).bindPopup('<b>'+info[3]+'</b><br>'+info[4]+'<br>'+
+			((info[5])?'<a href="'+info[5]+'" target="_blank">Open the file</a>':"")
+			);
+		leafs.addLayer(leaf);
+	}
+	map.addLayer(leafs);
+</script>
+</body>
+</html>

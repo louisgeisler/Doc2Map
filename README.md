@@ -17,7 +17,7 @@ Or on a scatter plot with a munual zoom level:
 ![Plotly Map](https://user-images.githubusercontent.com/82355033/140194962-0a3a3611-3e39-4ac9-a3a7-f9d84849cbc7.gif)
 [**Live Demo 1 With Wikipedia Dataset**](https://louisgeisler.github.io/Doc2Map/example/SimpleWikipedia/PlotlyDocMap.html)
 
-[**Live Demo 2 With 20 News Groups**](https://louisgeisler.github.io/Doc2Map/example/20NewsGroups/PlotlyDocMap.htmlé
+[**Live Demo 2 With 20 News Groups**](https://louisgeisler.github.io/Doc2Map/example/20NewsGroups/PlotlyDocMap.html)
                                                                                               
 # Using Doc2Map
 

@@ -18,23 +18,37 @@ Or on a scatter plot with a munual zoom level:
 [**Live Demo 1 With Wikipedia Dataset**](https://louisgeisler.github.io/Doc2Map/example/SimpleWikipedia/PlotlyDocMap.html)
 
 [**Live Demo 2 With 20 News Groups**](https://louisgeisler.github.io/Doc2Map/example/20NewsGroups/PlotlyDocMap.html)
-                                                                                              
+
+# Why use Doc2Map?
+
+With Doc2Map, you will be able to create beautiful, intuitive, and interactive visuals to summarise your document corpus in a map, similar to Google Map, with topics, clusters, and documents, instead of the names of countries, states, and cities.
+
+Thanks to Apache Tika –a software able to detect and extract and text from over a thousand different file types– allow Doc2Map to read virtually any kind of file.
+
+**Note:** This is not OCR, can’t extract text from pictures.
+
 # Using Doc2Map
 
-There is two way of using Doc2Map:
+There are two ways to use Doc2Vec:
+ - Launching directly the python module
+ - Importing the Doc2Map library in your script
 
- - Windows Binary
- - Importing it in a Python Script
+## Launching Doc2Map Module
 
-## Windows Binary
-
-If you are on windows, you can simply download the binary and launch it. Once launch, you will have to wait a little for the programm to start, then you will be asked what folder you want to analyse:
+Your first option is to directly launch the module. Once launch, you will have to wait a little for the programm to start, then you will be asked what folder you want to analyse:
 ![image](https://user-images.githubusercontent.com/82355033/140196515-8bb73e47-821c-4adc-a368-6245748356b8.png)
 Select the folder with the document you want to cartography.
 
 For the next step, you will have to be patient. Doc2Map will analyse and convert into plain text your docuemnt, then organise them. Depending of the format, the size and the number of documents, it may take a long time...
 
-When finished, two web pages will be automaticaly launch on your browser to show you different vcartography of you documents.
+When finished, two web pages will be automaticaly launch on your browser to show you different cartographies of you documents.
+
+The examples are loaded from HTML files newly created. You can easily find their localization by looking at the address bar of your browser, you will see something like *file://Your/Path/To/Your/Visuals*
+
+These files can easily be exported to another machine, with little of requirements:
+ - If your visualization is based on local files, once exported, these files may no longer be accessible by interacting with the visualisation.
+ - However, there will be no problem, if you use a common share hard drive with the people you share the visualisations (like it may often be the case in many firms, under the form of a local network).
+For the visualisation DocMap.html, you will have to include the files: DocMapdensity.svg and data.js.
 
 ## Importing in a Python Script
 

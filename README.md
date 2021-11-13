@@ -36,7 +36,9 @@ There are two ways to use Doc2Vec:
 ## Launching Doc2Map Module
 
 Your first option is to directly launch the module. Once launch, you will have to wait a little for the programm to start, then you will be asked what folder you want to analyse:
+
 ![image](https://user-images.githubusercontent.com/82355033/140196515-8bb73e47-821c-4adc-a368-6245748356b8.png)
+
 Select the folder with the document you want to cartography.
 
 For the next step, you will have to be patient. Doc2Map will analyse and convert into plain text your docuemnt, then organise them. Depending of the format, the size and the number of documents, it may take a long time...

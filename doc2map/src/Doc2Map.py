@@ -157,7 +157,7 @@ class Doc2Map:
         map.addControl(new L.Control.Fullscreen());
         map.fitBounds(map_bounds);
         L.imageOverlay('DocMapdensity.svg', image_bounds).addTo(map);
-        var zoomOffset = map.getZoom()-offsetZoom;
+        var zoomOffset = map.getZoom(); //-offsetZoom;
         map.options.minZoom = zoomOffset;
         map.options.maxZoom = zoomOffset + max_depth+6;
         map.options.zoom = zoomOffset;
@@ -191,13 +191,13 @@ class Doc2Map:
             leafs.addLayer(leaf);
         }
         map.addLayer(leafs);
-	    map.setZoom(0);
+	    //map.setZoom(0);
     </script>
     </body>
     </html>
     """
 
-    #==============================================================================================================#
+    #=========================================================================================================================================================#
 
     dynamic_tree = r"""
     <!DOCTYPE html>
@@ -906,8 +906,8 @@ class Doc2Map:
         self.offset = int(np.ceil(self.offset))
         
         # Set all the leaves at the same Z as their parent node
-        for n, degree in G.out_degree():
-            G.nodes[n]["z"] = G.nodes[n]["z"] + self.offset
+        #for n, degree in G.out_degree():
+        #    G.nodes[n]["z"] = G.nodes[n]["z"] + self.offset
 
         self.simplified_tree = G
         
@@ -1415,7 +1415,7 @@ class Doc2Map:
         p1 = np.percentile([len(data["content"]) for data in lData], 60)
         p2 = np.percentile([len(data["content"]) for data in lData], 90)
         lData = [data for data in lData if p1<len(data["content"])<p2]
-        lData = np.random.choice(lData, 1000, replace=False)
+        lData = np.random.choice(lData, 100, replace=False)
         n = len(lData)
         percent = 5*n/100
         d2m = cls()
@@ -1451,28 +1451,9 @@ class Doc2Map:
         d2m.scatter()
         d2m.display_tree()
         d2m.display_simplified_tree()
-        d2m.plotly_interactive_map()
         d2m.interactive_map()
+        d2m.plotly_interactive_map()
 
-
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
-print("Open Folder")
-root = Tk()
-root.withdraw()
-path = filedialog.askdirectory(
-    title="Folder of the documents to analyse:",
-    mustexist=True,
-    parent=root,
-).replace(r"/", "\\")
-
-d2m = Doc2Map(speed="deep-learn", lLanguage=["en", "fr"], min_count=20)
-d2m.add_files(path)
-d2m.build()
-d2m.scatter()
-d2m.display_tree()
-d2m.display_simplified_tree()
-d2m.plotly_interactive_map()
-d2m.interactive_map()
 
 if __name__ == "__main__":
     

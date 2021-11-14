@@ -19,8 +19,7 @@ import requests
 import warnings
 import unidecode
 from PIL import Image, ImageDraw, ImageFont
-
-import easygui as g
+from tkinter import Tk, filedialog
 
 from fastcluster import *
 #import scipy.cluster.hierarchy as sch
@@ -158,7 +157,7 @@ class Doc2Map:
         map.addControl(new L.Control.Fullscreen());
         map.fitBounds(map_bounds);
         L.imageOverlay('DocMapdensity.svg', image_bounds).addTo(map);
-        var zoomOffset = map.getZoom()-1;
+        var zoomOffset = map.getZoom()-offsetZoom;
         map.options.minZoom = zoomOffset;
         map.options.maxZoom = zoomOffset + max_depth+6;
         map.options.zoom = zoomOffset;
@@ -192,6 +191,7 @@ class Doc2Map:
             leafs.addLayer(leaf);
         }
         map.addLayer(leafs);
+	    map.setZoom(0);
     </script>
     </body>
     </html>
@@ -428,7 +428,7 @@ class Doc2Map:
     </body>
     """
     
-    def __init__(self, speed="learn", lLanguage = ["en"], lemmatizing = True, ramification = 20, min_count = 3):
+    def __init__(self, speed="learn", lLanguage = ["en"], lemmatizing = True, ramification = None, min_count = 3):
 
         self.lData = []
         self.model = None
@@ -479,7 +479,7 @@ class Doc2Map:
                     warnings.warn("Can't download the lemmatization dictionnary from:\n\t"+https+"\n try to download it manually.\nThe lemmatization will be disable.")
                     return False
                 
-                os.makedirs(self.module_path+"lexique")
+                os.makedirs(self.module_path+"lexique", exist_ok=True)
                 with open(self.module_path+"lexique/lemmatization-"+lang+".txt", 'w', encoding='utf-8-sig') as file:
                     file.write(r.text)
             
@@ -530,18 +530,18 @@ class Doc2Map:
             self.tika = True
 
         lFile = self.__search_folder(path)
-        print("There is",len(lFile),"found!")
+        print("There is",len(lFile),"documents found!")
         for file in lFile:
             path = os.path.realpath(file)
             text = self.__readfile(path)
             label = os.path.basename(file)
             url = r"file:"+pathname2url(path)
             target = os.path.dirname(path)
-            self.add_text(text, label, url, target)
+            self.add_text(text, label, target, url)
     
 
     def add_text(self, text, label, target=None, url=None):
-    
+        
         self.lData += [{
             "text": self.__preprocessed_text(text),
             "label": label,
@@ -617,12 +617,18 @@ class Doc2Map:
 
 
     def build(self):
-
+        
+        if self.ramification is None:
+            self.ramification = int(np.ceil(np.log(len(self.lData))/np.log(4)))
         self.numeric_target()
         self.__embedding()
+        print("Embedding finished")
         self.__projection()
+        print("Projection finished")
         self.hierarchical_tree()
+        print("Hierarchical Tree finished")
         self.simplified_tree()
+        print("Simplified Tree finished")
     
 
     def scatter(self):
@@ -631,14 +637,15 @@ class Doc2Map:
             x=self.lDocEmbedding2D[:,0],
             y=self.lDocEmbedding2D[:,1],
             mode='markers',
-            customdata=[([data["URL"]], [data["label"]]) for data in self.lData],
+            customdata=[([data["URL"]], [data["label"]], [data["target"]]) for data in self.lData],
             marker={
                 "color": [info["target"] for info in self.lData],
                 "colorscale": "Viridis",
             },
             hovertemplate=(
                 "Label: <b>%{customdata[1]}</b><br>"+
-                "URL: %{customdata[0]}"+
+                "URL: %{customdata[0]}<br>"+
+                "Target: %{customdata[2]}"+
                 "<extra></extra>")
         ))
         """fig.add_trace(go.Scatter(
@@ -754,6 +761,7 @@ class Doc2Map:
         
         #area_max = np.prod(np.std(self.lDocEmbedding2D, axis=0)*2)
         area_max = np.max(np.amax(self.lDocEmbedding2D, axis=0) - np.amin(self.lDocEmbedding2D, axis=0))**2
+        self.area_max = area_max
         
         def add_property_node(node):
             
@@ -864,15 +872,14 @@ class Doc2Map:
                         sZ.add(int(info["z"]))
                 else:
                     dZoomLevelDensity[int(info["z"])] = dZoomLevelDensity.get(int(zn), 0) + 1
-
-
-            # Stop when the mean of leaves by parents is greater than 12
-            if div/nDiv>self.ramification:
-                break
             
             # Cut all the leaves after a maximal depth
             #max_zoom = max(list(dZoomLevelDensity.items()), key=lambda x: x[1])[0]-1
             max_zoom = max(sZ)
+
+            # Stop when the mean of leaves by parents is greater than ramification
+            if div/nDiv>self.ramification or max_zoom<=0:
+                break
             
             for n, info in list(G.nodes.items()):
                 if info["z"]>=max_zoom and G.out_degree(n)!=0 and G.in_degree(n)!=0:
@@ -883,10 +890,24 @@ class Doc2Map:
                         #    G.nodes[s]["z"] = int(np.floor(zn))
                     G.remove_node(n)
 
+        self.offset = 0
         # Set all the leaves at the same Z as their parent node
         for n, degree in G.out_degree():
             if degree==0:
                 G.nodes[n]["z"] = G.nodes[list(G.predecessors(n))[0]]["z"]
+            else:
+                if all([G.out_degree(i)==0 for i in G.successors(n)]):
+                    l2D = np.array([self.lDocEmbedding2D[i, :] for i in G.successors(n)])
+                    area = np.max(np.amax(l2D, axis=0) - np.amin(l2D, axis=0))**2
+                    z = np.log((self.area_max)/np.prod(area))/np.log(4)
+                    self.offset = max(self.offset, z - G.nodes[n]["z"])
+        
+        #print(self.offset, np.ceil(self.offset))
+        self.offset = int(np.ceil(self.offset))
+        
+        # Set all the leaves at the same Z as their parent node
+        for n, degree in G.out_degree():
+            G.nodes[n]["z"] = G.nodes[n]["z"] + self.offset
 
         self.simplified_tree = G
         
@@ -1199,6 +1220,7 @@ class Doc2Map:
                         +"\nconst lMarker="+str(lMarker).replace("None", "null")+";"
                         +"\nconst dNode="+str(dNode)+";"
                         +"\nconst max_depth="+str(max_depth)+";"
+                        +"\nconst offsetZoom="+str(self.offset)+";"
                         ))
             
         with open(self.module_path+"DocMap.html", 'r') as file:
@@ -1414,15 +1436,43 @@ class Doc2Map:
     def main(cls):
     
         os.chdir(os.path.dirname(os.path.realpath(__file__)))
+        print("Open Folder")
+        root = Tk()
+        root.withdraw()
+        path = filedialog.askdirectory(
+            title="Folder of the documents to analyse:",
+            mustexist=True,
+            parent=root,
+        ).replace(r"/", "\\")
         
-        path = g.diropenbox("Folder of the documents to analyse:", "Folder of the documents to analyse:")
-        
-        d2m = Doc2Map()
+        d2m = Doc2Map(speed="deep-learn")
         d2m.add_files(path)
         d2m.build()
+        d2m.scatter()
+        d2m.display_tree()
+        d2m.display_simplified_tree()
         d2m.plotly_interactive_map()
         d2m.interactive_map()
 
+
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
+print("Open Folder")
+root = Tk()
+root.withdraw()
+path = filedialog.askdirectory(
+    title="Folder of the documents to analyse:",
+    mustexist=True,
+    parent=root,
+).replace(r"/", "\\")
+
+d2m = Doc2Map(speed="deep-learn", lLanguage=["en", "fr"], min_count=20)
+d2m.add_files(path)
+d2m.build()
+d2m.scatter()
+d2m.display_tree()
+d2m.display_simplified_tree()
+d2m.plotly_interactive_map()
+d2m.interactive_map()
 
 if __name__ == "__main__":
     

@@ -1,9 +1,7 @@
 import json
-from numba.cuda.args import InOut
 import numpy as np
 import os, sys
 from Doc2Map import Doc2Map
-
 
 
 if not os.path.exists(os.path.dirname(sys.argv[0])+"/simplewiki.json"):

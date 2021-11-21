@@ -447,13 +447,11 @@ class Doc2Map:
         sys.setrecursionlimit(1000000)
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         
-        if not os.path.exists(self.module_path+"DocMap.html"):
-            with open(self.module_path+"DocMap.html", "w") as f:
-                f.write(self.doc2mapHTML)
+        with open(self.module_path+"DocMap.html", "w") as f:
+            f.write(self.doc2mapHTML)
         
-        if not os.path.exists(self.module_path+"dynamic_tree.html"):
-            with open(self.module_path+"dynamic_tree.html", "w") as f:
-                f.write(self.doc2mapHTML)
+        with open(self.module_path+"dynamic_tree.html", "w") as f:
+            f.write(self.doc2mapHTML)
         
         
     class Lemmatizer:

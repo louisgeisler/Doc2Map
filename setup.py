@@ -1,3 +1,4 @@
+import os
 import setuptools
 
 with open("README.md", "r") as fh:
@@ -8,7 +9,7 @@ with open("requirements.txt", "r") as fh:
 
 setuptools.setup(
     name="doc2map", 
-    version="1.0.0",
+    version="1.0.2",
     author="Louis Geisler",
     description="Beautiful and interactive visualisations for NLP Topics",
     long_description=long_description,

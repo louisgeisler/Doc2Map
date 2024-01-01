@@ -5,6 +5,11 @@
 <img src="https://img.shields.io/badge/LinkedIn-blue?style=flat&logo=linkedin&labelColor=blue">
 </a>
 
+<h1 style="color: red;" align="center">⚠️Need Refactoring⚠️</h1>
+This project was only design as a prototype to prospect the possibilities of this map concept.  
+
+(As it was one of my first project)
+
 # Doc2Map
 
 Doc2Map is an algorithm for **topic modeling and visualization**. It can read any type of document files, but not OCR them. It will find topics base on the core idea of [Top2Vec](https://github.com/ddangelov/Top2Vec) and hierarchicaly display them on a map similar to a Google Map:
